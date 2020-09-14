@@ -67,7 +67,7 @@ Using default configuration:
   var client = new CodeNotary.ImmuDb.ImmuClient("localhost"))
 ```
 
-client implements IDisposable so you can wrap it with useing
+client implements IDisposable so you can wrap it with using
 
 ```C# 
 using (var client = new CodeNotary.ImmuDb.ImmuClient("localhost", 3322))
@@ -87,7 +87,7 @@ Use `LoginAsync` and `LogoutAsync` methods to initiate and terminate user sessio
     await immuClient.LogoutAsync();
 ```
 
-or you Close() to completele end your connection. After Logout() same client can be used, but after Close() you have to create new one. The Close() method called on dispose automatically
+alternativly you can call Close() to completele end your connection. After Logout() the same client can be used, but after Close() you have to create a new one. The Close() method called on dispose automatically
 
 ### Creating a database
 
@@ -127,7 +127,7 @@ await client.SetAsync("key", new MyClass() { Property = "Value" });
 var result = await client.GetAsync<MyClass>("key");
 ```
 
-TryGet methods also avaiable. The will not throw exceptions if specific key is missing in database
+TryGet methods are also avaiable. They will not throw exceptions if specific key is missing in a database
 
 ```C#
  if (await client.TryGet("key", out var value))
@@ -143,11 +143,11 @@ implements the mathematical validations while the application uses as a traditio
 read or write operation:
 
 ```C#
-    try {
+    try
+    {
         await client.SafeSetAsync("key", "value");
     
         var result = await client.SafeGetAsync("key");
-
     } 
     catch (VerificationException e) 
     {
