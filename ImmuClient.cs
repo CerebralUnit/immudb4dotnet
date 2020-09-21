@@ -221,7 +221,7 @@ namespace CodeNotary.ImmuDb
 
             CryptoUtils.Verify(result.Proof, result.Item, root);
 
-            this.rootHolder.SetRoot(this.activeDatabaseName, new Root() { Root_ = result.Proof.Root, Index = result.Proof.Index });
+            this.rootHolder.SetRoot(this.activeDatabaseName, new Root() { Root_ = result.Proof.Root, Index = result.Proof.At });
 
             return result.Item.Value.ToStringUtf8();
         }
@@ -252,7 +252,7 @@ namespace CodeNotary.ImmuDb
 
             CryptoUtils.Verify(proof, item, root);
 
-            this.rootHolder.SetRoot(this.activeDatabaseName, new Root() { Root_ = proof.Root, Index = proof.Index });
+            this.rootHolder.SetRoot(this.activeDatabaseName, new Root() { Root_ = proof.Root, Index = proof.At });
         }
 
         public byte[] GetRoots()
