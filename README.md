@@ -43,7 +43,7 @@ verifications and state update protocol implementation are fully implemented by 
 ## Prerequisites
 
 immudb4dotnet assumes an already running immudb server. Running `immudb` is quite simple, please refer to the
-following link for downloading and running it: https://immudb.io/docs/quickstart.html
+following link for downloading and running it: https://docs.immudb.io/quickstart.html
 
 ## Installation
 
