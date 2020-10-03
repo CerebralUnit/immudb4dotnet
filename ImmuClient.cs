@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using CodeNotary.ImmuDb.ImmudbProto;
 using CodeNotary.ImmuDb.Roots;
+using Google.Protobuf;
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -36,8 +38,8 @@ namespace CodeNotary.ImmuDb
         {
             var loginRequest = new LoginRequest()
             {
-                User = Google.Protobuf.ByteString.CopyFromUtf8(user),
-                Password = Google.Protobuf.ByteString.CopyFromUtf8(password),
+                User = ByteString.CopyFromUtf8(user),
+                Password = ByteString.CopyFromUtf8(password),
             };
 
             var result = await this.client.LoginAsync(loginRequest, new CallOptions() { });
@@ -138,13 +140,13 @@ namespace CodeNotary.ImmuDb
 
         public async Task SetAsync(string key, string value)
         {
-            var request = new KeyValue()
+            var content = new Content()
             {
-                Key = Google.Protobuf.ByteString.CopyFromUtf8(key),
-                Value = Google.Protobuf.ByteString.CopyFromUtf8(value)
+                Timestamp = (ulong)DateTime.UtcNow.ToTimestamp().Seconds,
+                Payload = ByteString.CopyFromUtf8(value)
             };
 
-            await this.client.SetAsync(request, this.getSecurityHeader());
+            await this.SetRawAsync(key, content.ToByteArray());
         }
 
         public async Task SetAsync<T>(string key, T value) where T : class
@@ -152,18 +154,22 @@ namespace CodeNotary.ImmuDb
             await this.SetAsync(key, JsonConvert.SerializeObject(value));
         }
 
-        public bool TryGet(string key, out string value)
+        public async Task SetRawAsync(string key, byte[] value)
         {
-            var request = new Key()
+            var request = new KeyValue()
             {
-                Key_ = Google.Protobuf.ByteString.CopyFromUtf8(key),
+                Key = ByteString.CopyFromUtf8(key),
+                Value = ByteString.CopyFrom(value)
             };
 
+            await this.client.SetAsync(request, this.getSecurityHeader());
+        }
+
+        public bool TryGet(string key, out string value)
+        {
             try
             {
-                var result = this.client.Get(request, this.getSecurityHeader());
-
-                value = result.Value?.ToStringUtf8();
+                value = this.GetAsync(key).Result;
 
                 return true;
             }
@@ -190,14 +196,23 @@ namespace CodeNotary.ImmuDb
 
         public async Task<string> GetAsync(string key)
         {
+            var result = await this.GetRawAsync(key);
+
+            var content = Content.Parser.ParseFrom(result);
+
+            return content.Payload.ToStringUtf8();
+        }
+
+        public async Task<byte[]> GetRawAsync(string key)
+        {
             var request = new Key()
             {
-                Key_ = Google.Protobuf.ByteString.CopyFromUtf8(key),
+                Key_ = ByteString.CopyFromUtf8(key),
             };
 
             var result = await this.client.GetAsync(request, this.getSecurityHeader());
 
-            return result.Value?.ToStringUtf8();
+            return result.Value.ToByteArray();
         }
 
         public async Task<T> GetAsync<T>(string key) where T : class
@@ -209,11 +224,20 @@ namespace CodeNotary.ImmuDb
 
         public async Task<string> SafeGetAsync(string key)
         {
+            var result = await this.SafeGetRawAsync(key);
+
+            var content = Content.Parser.ParseFrom(result);
+
+            return content.Payload.ToStringUtf8();
+        }
+
+        public async Task<byte[]> SafeGetRawAsync(string key)
+        {
             var root = this.getActiveDatabaseRoot();
 
             var request = new SafeGetOptions()
             {
-                Key = Google.Protobuf.ByteString.CopyFromUtf8(key),
+                Key = ByteString.CopyFromUtf8(key),
                 RootIndex = new Index() { Index_ = root.Index }
             };
 
@@ -223,10 +247,21 @@ namespace CodeNotary.ImmuDb
 
             this.rootHolder.SetRoot(this.activeDatabaseName, new Root() { Root_ = result.Proof.Root, Index = result.Proof.At });
 
-            return result.Item.Value.ToStringUtf8();
+            return result.Item.Value.ToByteArray();
         }
 
         public async Task SafeSetAsync(string key, string value)
+        {
+            var content = new Content()
+            {
+                Timestamp = (ulong)DateTime.UtcNow.ToTimestamp().Seconds,
+                Payload = ByteString.CopyFromUtf8(value)
+            };
+
+            await this.SafeSetRawAsync(key, content.ToByteArray());
+        }
+
+        public async Task SafeSetRawAsync(string key, byte[] value)
         {
             var root = this.getActiveDatabaseRoot();
 
@@ -234,10 +269,10 @@ namespace CodeNotary.ImmuDb
             {
                 Kv = new KeyValue()
                 {
-                    Key = Google.Protobuf.ByteString.CopyFromUtf8(key),
-                    Value = Google.Protobuf.ByteString.CopyFromUtf8(value),
+                    Key = ByteString.CopyFromUtf8(key),
+                    Value = ByteString.CopyFrom(value)
                 },
-                
+
                 RootIndex = new Index() { Index_ = root.Index }
             };
 

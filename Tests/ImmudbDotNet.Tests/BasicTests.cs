@@ -16,6 +16,12 @@ namespace ImmudbDotNet.Tests
         private static string localImmuDB = @"C:\Temp\immudb\immudb.exe";
         private static Process localImmuDBProcess;
 
+        public string A
+        {
+            get;
+            set;
+        }
+
         [AssemblyInitialize]
         public static void InitImmuDB(TestContext context)
         {
@@ -63,13 +69,33 @@ namespace ImmudbDotNet.Tests
 
                 testValue = await client.GetAsync(key);
 
-                Assert.AreEqual(testValue, "test value");
+                Assert.AreEqual("test value", testValue);
+
+                await client.SetRawAsync(key, new byte[] {(byte)'A', (byte)'B', (byte)'C' });
+
+                var testARValue = await client.GetRawAsync(key);
+
+                Assert.AreEqual((byte)'A', testARValue[0]);
 
                 await client.SafeSetAsync(key, "test value 2");
 
                 testValue = await client.SafeGetAsync(key);
 
-                Assert.AreEqual(testValue, "test value 2");
+                Assert.AreEqual("test value 2", testValue);
+
+                await client.SafeSetRawAsync(key, new byte[] { (byte)'A', (byte)'B', (byte)'C' });
+
+                testARValue = await client.SafeGetRawAsync(key);
+
+                Assert.AreEqual((byte)'A', testARValue[0]);
+
+                this.A = "A";
+
+                await client.SetAsync("this", this);
+
+                var ts = await client.GetAsync<BasicTests>("this");
+
+                Assert.AreEqual("A", ts.A);
             }
             else
             {
