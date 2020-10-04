@@ -67,6 +67,8 @@ namespace ImmudbDotNet.Tests
             {
                 await client.SetAsync(key, "test value");
 
+                Assert.IsTrue(client.TryGet(key, out testValue));
+
                 testValue = await client.GetAsync(key);
 
                 Assert.AreEqual("test value", testValue);
@@ -76,6 +78,10 @@ namespace ImmudbDotNet.Tests
                 var testARValue = await client.GetRawAsync(key);
 
                 Assert.AreEqual((byte)'A', testARValue[0]);
+
+                testValue = await client.GetAsync(key);
+
+                Assert.AreEqual("ABC", testValue);
 
                 await client.SafeSetAsync(key, "test value 2");
 
@@ -88,6 +94,10 @@ namespace ImmudbDotNet.Tests
                 testARValue = await client.SafeGetRawAsync(key);
 
                 Assert.AreEqual((byte)'A', testARValue[0]);
+
+                testValue = await client.SafeGetAsync(key);
+
+                Assert.AreEqual("ABC", testValue);
 
                 this.A = "A";
 

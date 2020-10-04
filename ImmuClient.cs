@@ -198,9 +198,23 @@ namespace CodeNotary.ImmuDb
         {
             var result = await this.GetRawAsync(key);
 
-            var content = Content.Parser.ParseFrom(result);
+            try
+            {
+                var content = Content.Parser.ParseFrom(result);
 
-            return content.Payload.ToStringUtf8();
+                return content.Payload.ToStringUtf8();
+            }
+            catch (InvalidProtocolBufferException)
+            {
+                return ByteString.CopyFrom(result).ToStringUtf8();
+            }
+        }
+
+        public async Task<T> GetAsync<T>(string key) where T : class
+        {
+            var json = await this.GetAsync(key);
+
+            return JsonConvert.DeserializeObject<T>(json);
         }
 
         public async Task<byte[]> GetRawAsync(string key)
@@ -215,20 +229,20 @@ namespace CodeNotary.ImmuDb
             return result.Value.ToByteArray();
         }
 
-        public async Task<T> GetAsync<T>(string key) where T : class
-        {
-            var json = await this.GetAsync(key);
-
-            return JsonConvert.DeserializeObject<T>(json);
-        }
-
         public async Task<string> SafeGetAsync(string key)
         {
             var result = await this.SafeGetRawAsync(key);
 
-            var content = Content.Parser.ParseFrom(result);
+            try
+            {
+                var content = Content.Parser.ParseFrom(result);
 
-            return content.Payload.ToStringUtf8();
+                return content.Payload.ToStringUtf8();
+            }
+            catch (InvalidProtocolBufferException)
+            {
+                return ByteString.CopyFrom(result).ToStringUtf8();
+            }
         }
 
         public async Task<byte[]> SafeGetRawAsync(string key)
