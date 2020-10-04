@@ -19,7 +19,6 @@
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Supported Versions](#supported-versions)
-- [Quickstart](#quickstart)
 - [Step by step guide](#step-by-step-guide)
     * [Creating a Client](#creating-a-client)
     * [User sessions](#user-sessions)
