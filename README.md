@@ -64,7 +64,7 @@ The following code snippets shows how to create a client.
 Using default configuration:
 ```C# 
 
-  var client = new CodeNotary.ImmuDb.ImmuClient("localhost"))
+  var client = new CodeNotary.ImmuDb.ImmuClient("localhost");
 ```
 
 client implements IDisposable so you can wrap it with using
